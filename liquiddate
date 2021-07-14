@@ -1,0 +1,56 @@
+explore: testing_liquid_date_logic {}
+view: testing_liquid_date_logic {
+  derived_table: {
+    sql:
+
+    {% assign now_dt = "now" | date: "%Y-%m" %}
+    {% assign target_dt = target_month._parameter_value | date: "%Y-%m" %}
+    {% if target_dt >= now_dt %} {% assign which_date_to_use = 'nowM1' %}
+      {% else %}{% assign which_date_to_use = 'target' %}
+    {% endif %}
+
+    select
+         'target' as period
+          ,start_month
+
+
+    from (
+    select 1 as dim1
+            , '{{now_dt}}' as now_month
+            , '{{target_dt}}' as target_month_dim
+            , '{{which_date_to_use}}' as which_date_to_use
+            , case when date_trunc(date({% parameter target_month %}),MONTH) >= date_trunc(current_date,MONTH)
+                      then date_sub(date_trunc(current_date,MONTH), interval 1 MONTH)
+                   else date_trunc(date({% parameter target_month %}),MONTH) end as target_end
+          ) te
+
+
+                        ;;
+  }
+
+dimension: dim1 {
+  type: number
+}
+
+dimension: now_month {
+  type: string
+}
+
+  dimension: target_month_dim {
+    type: string
+  }
+
+  dimension: which_date_to_use {
+    type: string
+  }
+
+  dimension: target_end {
+    type: date
+  }
+
+  parameter: target_month {
+    type: date
+    default_value: "2020-02-01"
+  }
+
+}
